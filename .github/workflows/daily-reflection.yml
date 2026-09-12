@@ -1,0 +1,40 @@
+name: 매일 미사 3줄 묵상 자동 생성
+
+on:
+  schedule:
+    # 매일 KST 새벽 5시 = UTC 20:00 (전날)
+    - cron: '0 20 * * *'
+  workflow_dispatch: {}   # 수동 실행 버튼도 제공
+
+permissions:
+  contents: write   # reflections.json 커밋용
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 오늘의 3줄 묵상 생성
+        env:
+          # AI 묵상을 원하면 저장소 Secrets에 OPENAI_API_KEY 추가 (선택)
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: node scripts/generate-reflection.mjs
+
+      - name: 변경 사항 커밋 & 푸시
+        run: |
+          git config user.name "reflection-bot"
+          git config user.email "bot@users.noreply.github.com"
+          if [ -n "$(git status --porcelain reflections.json)" ]; then
+            git add reflections.json
+            git commit -m "chore: 오늘의 미사 3줄 묵상 자동 갱신 [skip ci]"
+            git push
+          else
+            echo "변경 사항 없음 - 커밋 생략"
+          fi

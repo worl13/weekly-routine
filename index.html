@@ -20,65 +20,94 @@
     <p class="subtitle">오늘도 수고 많으셨어요 ☕</p>
   </header>
 
+  <!-- 탭 네비게이션 -->
+  <nav class="tab-bar">
+    <button class="tab-btn active" id="tabWeekly" data-tab="weekly">📅 주간 Overview</button>
+    <button class="tab-btn" id="tabDaily" data-tab="daily">✅ Daily</button>
+  </nav>
+
   <main>
-    <!-- 오늘의 미사 3줄 묵상 (제일 위) -->
-    <section class="mass-section" id="massSection">
-      <div class="mass-head">
-        <h2 class="section-title mass-title">🙏 오늘의 미사</h2>
-        <div class="mass-links">
-          <a class="mass-flag" id="massKr" href="#" target="_blank" rel="noopener" title="한국 매일미사">🇰🇷 매일미사</a>
-          <a class="mass-flag" id="massUs" href="#" target="_blank" rel="noopener" title="미국 Daily Reflections">🇺🇸 Reflections</a>
+    <!-- ===== 주간 Overview 탭 ===== -->
+    <div class="tab-panel active" id="panelWeekly">
+      <!-- 주간 전체 보기 -->
+      <section class="week-section">
+        <div class="week-nav">
+          <button class="wk-nav-btn" id="weekPrev" title="이전 주">‹</button>
+          <h2 class="section-title week-title" id="weekTitle">🗓️ 이번 주</h2>
+          <button class="wk-nav-btn" id="weekNext" title="다음 주">›</button>
         </div>
+        <div class="week-grid" id="weekGrid"></div>
+        <div class="week-nav-footer">
+          <button class="wk-today-btn" id="weekToday">이번 주로</button>
+        </div>
+      </section>
+
+      <!-- 시험 D-day 알림 섹션 -->
+      <section class="exam-section" id="examSection" style="display:none;">
+        <h2 class="section-title">⏳ 다가오는 시험 · 과제</h2>
+        <div class="exam-list" id="examList"></div>
+      </section>
+
+      <!-- 월간 달력 (9~12월, 대학원 일정) -->
+      <section class="calendar-section" id="calendarSection">
+        <h2 class="section-title">📆 대학원 일정 달력</h2>
+        <div class="calendar-legend">
+          <span class="legend-item"><span class="legend-dot type-exam"></span> 시험</span>
+          <span class="legend-item"><span class="legend-dot type-report"></span> 보고서</span>
+          <span class="legend-item"><span class="legend-dot type-presentation"></span> 발표</span>
+        </div>
+        <div class="calendars" id="calendars"></div>
+      </section>
+    </div>
+
+    <!-- ===== Daily 탭 ===== -->
+    <div class="tab-panel" id="panelDaily">
+      <!-- 날짜 넘기기 네비게이션 -->
+      <div class="daily-nav">
+        <button class="day-nav-btn" id="dayPrev" title="이전 날">‹</button>
+        <div class="daily-date" id="dailyDate"></div>
+        <button class="day-nav-btn" id="dayNext" title="다음 날">›</button>
       </div>
-      <ol class="mass-lines" id="massLines"></ol>
-    </section>
-
-    <!-- 오늘 할 일 (크게 — 체크리스트) -->
-    <section class="today-section today-hero" id="todaySection">
-      <h2 class="section-title today-title">
-        ✅ 오늘 할 일
-        <span class="today-count" id="todayCount"></span>
-      </h2>
-      <div class="task-list" id="todayTasks"></div>
-      <div class="today-bar"><div class="today-bar-inner" id="todayBar" style="width:0%"></div></div>
-    </section>
-
-    <!-- 주간 전체 보기 -->
-    <section class="week-section">
-      <h2 class="section-title">🗓️ 이번 주 전체</h2>
-      <div class="week-grid" id="weekGrid"></div>
-    </section>
-
-    <!-- 시험 D-day 알림 섹션 -->
-    <section class="exam-section" id="examSection" style="display:none;">
-      <h2 class="section-title">⏳ 다가오는 시험 · 과제</h2>
-      <div class="exam-list" id="examList"></div>
-    </section>
-
-    <!-- 아침 루틴 섹션 (월~금만 표시) -->
-    <section class="morning-section" id="morningSection" style="display:none;">
-      <h2 class="section-title">🌅 아침 루틴 <span class="morning-progress" id="morningProgress"></span></h2>
-      <div class="morning-steps" id="morningSteps"></div>
-      <div class="morning-done-bar"><div class="morning-done-bar-inner" id="morningBar" style="width:0%"></div></div>
-    </section>
-
-    <!-- 퇴근 후 루틴 섹션 (월~금만 표시) -->
-    <section class="evening-section" id="eveningSection" style="display:none;">
-      <h2 class="section-title">🌙 퇴근 후 루틴 <span class="evening-progress" id="eveningProgress"></span></h2>
-      <div class="morning-steps" id="eveningSteps"></div>
-      <div class="morning-done-bar"><div class="morning-done-bar-inner evening-bar-inner" id="eveningBar" style="width:0%"></div></div>
-    </section>
-
-    <!-- 월간 달력 (9~12월, 대학원 일정) — 맨 하단 -->
-    <section class="calendar-section" id="calendarSection">
-      <h2 class="section-title">📆 대학원 일정 달력</h2>
-      <div class="calendar-legend">
-        <span class="legend-item"><span class="legend-dot type-exam"></span> 시험</span>
-        <span class="legend-item"><span class="legend-dot type-report"></span> 보고서</span>
-        <span class="legend-item"><span class="legend-dot type-presentation"></span> 발표</span>
+      <div class="daily-today-row">
+        <button class="day-today-btn" id="dayToday">오늘로</button>
       </div>
-      <div class="calendars" id="calendars"></div>
-    </section>
+
+      <!-- 오늘의 미사 3줄 묵상 -->
+      <section class="mass-section" id="massSection">
+        <div class="mass-head">
+          <h2 class="section-title mass-title">🙏 오늘의 미사</h2>
+          <div class="mass-links">
+            <a class="mass-flag" id="massKr" href="#" target="_blank" rel="noopener" title="한국 매일미사">🇰🇷 매일미사</a>
+            <a class="mass-flag" id="massUs" href="#" target="_blank" rel="noopener" title="미국 Daily Reflections">🇺🇸 Reflections</a>
+          </div>
+        </div>
+        <ol class="mass-lines" id="massLines"></ol>
+      </section>
+
+      <!-- 아침 루틴 섹션 (월~금만 표시) -->
+      <section class="morning-section" id="morningSection" style="display:none;">
+        <h2 class="section-title">🌅 아침 루틴 <span class="morning-progress" id="morningProgress"></span></h2>
+        <div class="morning-steps" id="morningSteps"></div>
+        <div class="morning-done-bar"><div class="morning-done-bar-inner" id="morningBar" style="width:0%"></div></div>
+      </section>
+
+      <!-- 할 일 체크리스트 -->
+      <section class="today-section today-hero" id="todaySection">
+        <h2 class="section-title today-title">
+          ✅ 할 일
+          <span class="today-count" id="todayCount"></span>
+        </h2>
+        <div class="task-list" id="todayTasks"></div>
+        <div class="today-bar"><div class="today-bar-inner" id="todayBar" style="width:0%"></div></div>
+      </section>
+
+      <!-- 퇴근 후 루틴 섹션 (월~금만 표시) -->
+      <section class="evening-section" id="eveningSection" style="display:none;">
+        <h2 class="section-title">🌙 퇴근 후 루틴 <span class="evening-progress" id="eveningProgress"></span></h2>
+        <div class="morning-steps" id="eveningSteps"></div>
+        <div class="morning-done-bar"><div class="morning-done-bar-inner evening-bar-inner" id="eveningBar" style="width:0%"></div></div>
+      </section>
+    </div>
   </main>
 
   <footer>

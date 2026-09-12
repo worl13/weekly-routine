@@ -12,81 +12,86 @@ const safeStorage = {
   }
 };
 
-const STORAGE_KEY = 'routine_done_tasks';
-const STORAGE_DATE_KEY = 'routine_done_date';
+// 날짜별 완료 기록 (영구 저장, 절대 리셋 안 함)
+// 구조: { "2026-9-12": ["mon-1", "mon-2", ...], ... }
+const DAILY_STORE_KEY = 'routine_daily_v2';
 
-// 주 단위 완료 저장 (빨래처럼 주 1회 하는 그룹 업무용)
-const WEEK_GROUP_KEY = 'routine_week_groups';
-const WEEK_ID_KEY = 'routine_week_id';
+// ===== 한국시간(KST) 기준 처리 =====
+// 기기 시간대와 무관하게 항상 한국시간(UTC+9)으로 계산한다.
+// Date 객체의 UTC 값에 +9시간을 더해, 그 UTC 필드를 'KST 벽시계 값'으로 사용한다.
+function nowKST() {
+  return new Date(Date.now() + 9 * 60 * 60 * 1000);
+}
 
+// KST "오늘"을 나타내는 Date (자정 기준). 넘겨보기용 viewDate의 기준점.
+function kstToday() {
+  const k = nowKST();
+  return new Date(Date.UTC(k.getUTCFullYear(), k.getUTCMonth(), k.getUTCDate()));
+}
+
+// 사용자가 넘겨보는 날짜 (기본: 오늘). 표시(미사/오늘 할 일/루틴)에만 영향.
+let viewDate = kstToday();
+
+// viewDate 기준 날짜 문자열/요일 (표시용)
 function getTodayStr() {
-  const d = new Date();
-  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+  return `${viewDate.getUTCFullYear()}-${viewDate.getUTCMonth()+1}-${viewDate.getUTCDate()}`;
+}
+function getTodayDow() {
+  return viewDate.getUTCDay(); // 0=일 ~ 6=토
 }
 
-// 이번 주의 일요일 날짜를 주 식별자로 사용 (일요일 시작 기준)
-function getWeekId() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  const sunday = new Date(d);
-  sunday.setDate(d.getDate() - d.getDay()); // 이번 주 일요일로 이동
-  return `${sunday.getFullYear()}-${sunday.getMonth()+1}-${sunday.getDate()}`;
-}
-
-// 주가 바뀌면 그룹 완료 상태 초기화
-function loadWeekGroups() {
-  const savedWeek = safeStorage.getItem(WEEK_ID_KEY);
-  const thisWeek = getWeekId();
-  if (savedWeek !== thisWeek) {
-    safeStorage.setItem(WEEK_ID_KEY, thisWeek);
-    safeStorage.setItem(WEEK_GROUP_KEY, JSON.stringify({}));
-    return {};
-  }
+// ===== 날짜별 영구 저장 (절대 리셋 안 함) =====
+function loadDailyStore() {
   try {
-    return JSON.parse(safeStorage.getItem(WEEK_GROUP_KEY) || '{}');
+    return JSON.parse(safeStorage.getItem(DAILY_STORE_KEY) || '{}');
   } catch { return {}; }
 }
-
-function saveWeekGroups(obj) {
-  safeStorage.setItem(WEEK_GROUP_KEY, JSON.stringify(obj));
-  safeStorage.setItem(WEEK_ID_KEY, getWeekId());
+function saveDailyStore(store) {
+  safeStorage.setItem(DAILY_STORE_KEY, JSON.stringify(store));
 }
 
-// weekGroups[group] = 완료 처리된 task id (그 주에 실제로 완료한 항목)
-let weekGroups = loadWeekGroups();
+// 전체 날짜별 기록 (메모리 캐시)
+let dailyStore = loadDailyStore();
 
-
-
-function loadDoneSet() {
-  // 주가 바뀌면(매주 일요일 0시) 체크 초기화
-  const savedWeek = safeStorage.getItem(STORAGE_DATE_KEY);
-  const thisWeek = getWeekId();
-  if (savedWeek !== thisWeek) {
-    safeStorage.setItem(STORAGE_DATE_KEY, thisWeek);
-    safeStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-    return new Set();
-  }
-  try {
-    const arr = JSON.parse(safeStorage.getItem(STORAGE_KEY) || '[]');
-    return new Set(arr);
-  } catch { return new Set(); }
+// 특정 날짜(키)의 완료 Set 얻기
+function getDoneSetFor(dateKey) {
+  const arr = dailyStore[dateKey] || [];
+  return new Set(arr);
 }
 
-function saveDoneSet(set) {
-  safeStorage.setItem(STORAGE_KEY, JSON.stringify([...set]));
-  safeStorage.setItem(STORAGE_DATE_KEY, getWeekId());
+// 특정 날짜의 task 완료 여부
+function isDoneOn(dateKey, taskId) {
+  const arr = dailyStore[dateKey];
+  return Array.isArray(arr) && arr.includes(taskId);
 }
 
-let doneSet = loadDoneSet();
+// 특정 날짜의 task 완료 토글 → 영구 저장
+function toggleDoneOn(dateKey, taskId) {
+  const set = getDoneSetFor(dateKey);
+  if (set.has(taskId)) set.delete(taskId);
+  else set.add(taskId);
+  if (set.size === 0) delete dailyStore[dateKey];
+  else dailyStore[dateKey] = [...set];
+  saveDailyStore(dailyStore);
+}
+
+// 현재 보고 있는 날짜(viewDate)의 완료 Set
+function currentDoneSet() {
+  return getDoneSetFor(getTodayStr());
+}
 
 // ===== 유틸 =====
-function getTodayDow() {
-  return new Date().getDay(); // 0=일 ~ 6=토
+// viewDate가 실제 오늘(KST)인지
+function isViewingToday() {
+  const t = kstToday();
+  return viewDate.getTime() === t.getTime();
 }
 
+// 현재 시각(분). 마감 강조용 — 오늘을 볼 때만 실제 KST 시각, 아니면 0시로 취급
 function getNow() {
-  const d = new Date();
-  return d.getHours() * 60 + d.getMinutes();
+  if (!isViewingToday()) return 0;
+  const k = nowKST();
+  return k.getUTCHours() * 60 + k.getUTCMinutes();
 }
 
 function timeToMinutes(timeStr) {
@@ -106,14 +111,30 @@ function formatTime(timeStr) {
 // ===== 오늘 날짜 표시 =====
 function renderHeader() {
   const days = ['일','월','화','수','목','금','토'];
-  const d = new Date();
   const badge = document.getElementById('todayBadge');
-  badge.textContent = `${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]})`;
+  const mon = viewDate.getUTCMonth() + 1;
+  const day = viewDate.getUTCDate();
+  const dow = days[viewDate.getUTCDay()];
+  const todayMark = isViewingToday() ? '' : ' · 다른 날 보기';
+  badge.textContent = `${mon}월 ${day}일 (${dow})${todayMark}`;
+}
+
+// ===== 날짜 넘기기 =====
+function shiftView(deltaDays) {
+  const d = new Date(viewDate.getTime());
+  d.setUTCDate(d.getUTCDate() + deltaDays);
+  viewDate = d;
+  render();
+}
+function resetViewToToday() {
+  viewDate = kstToday();
+  render();
 }
 
 // ===== 카드 생성 =====
 function createTaskCard(task, showCheckbox = true) {
-  const isDone = task.group ? isGroupDone(task) : doneSet.has(task.id);
+  const dateKey = getTodayStr();
+  const isDone = isDoneOn(dateKey, task.id);
   const cat = CATEGORY_META[task.category] || CATEGORY_META.work;
   const nowMin = getNow();
   const taskMin = timeToMinutes(task.time);
@@ -168,71 +189,41 @@ function createTaskCard(task, showCheckbox = true) {
     </div>
   `;
 
-  // 체크 토글 이벤트
+  // 체크 토글 이벤트 (현재 보고 있는 날짜에 기록, 영구 저장)
   if (showCheckbox) {
     const btn = card.querySelector('.check-btn');
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (task.group) {
-        toggleGroupDone(task);
-      } else {
-        toggleDone(task.id);
-      }
+      toggleDoneOn(getTodayStr(), task.id);
+      render();
     });
   }
 
   return card;
 }
 
-function toggleDone(id) {
-  if (doneSet.has(id)) {
-    doneSet.delete(id);
-  } else {
-    doneSet.add(id);
+// 이번 주(viewDate 포함 주) 안에서 특정 그룹(예: 빨래)이 완료됐는지
+// 주의 어느 날짜든 그 그룹의 task가 체크됐으면 true
+function isGroupDoneInViewWeek(group) {
+  // viewDate 기준 일요일 찾기
+  const sunday = new Date(viewDate.getTime());
+  sunday.setUTCDate(sunday.getUTCDate() - sunday.getUTCDay());
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(sunday.getTime());
+    d.setUTCDate(d.getUTCDate() + i);
+    const key = `${d.getUTCFullYear()}-${d.getUTCMonth()+1}-${d.getUTCDate()}`;
+    const dow = d.getUTCDay();
+    const tasks = WEEK_DATA[dow]?.tasks || [];
+    for (const t of tasks) {
+      if (t.group === group && isDoneOn(key, t.id)) return true;
+    }
   }
-  saveDoneSet(doneSet);
-  render();
-}
-
-// 모든 요일에서 task id로 task 객체 찾기
-function findTaskById(id) {
-  for (let d = 0; d < 7; d++) {
-    const t = (WEEK_DATA[d]?.tasks || []).find(t => t.id === id);
-    if (t) return t;
-  }
-  return null;
-}
-
-// 그룹(예: 빨래) 완료 토글 — 주 단위로 저장
-function toggleGroupDone(task) {
-  const g = task.group;
-  if (weekGroups[g] === task.id) {
-    // 같은 항목 다시 클릭 → 이번 주 완료 취소
-    delete weekGroups[g];
-  } else {
-    // 이 항목으로 이번 주 완료 처리 (다른 요일 항목은 자동 숨김)
-    weekGroups[g] = task.id;
-  }
-  saveWeekGroups(weekGroups);
-  render();
-}
-
-// 그룹 업무를 이번 주에 이미 (다른 날) 완료했는지 → 숨겨야 하는지 판단
-function isGroupHiddenForToday(task) {
-  if (!task.group) return false;
-  const doneId = weekGroups[task.group];
-  // 이번 주에 그룹을 완료했고, 그게 이 항목이 아니면 숨김
-  return doneId && doneId !== task.id;
-}
-
-// 그룹 업무가 이번 주에 완료됐는지 (자기 자신 기준)
-function isGroupDone(task) {
-  return task.group && weekGroups[task.group] === task.id;
+  return false;
 }
 
 // ===== 오늘의 업무 렌더링 =====
 function isTaskDone(task) {
-  return task.group ? isGroupDone(task) : doneSet.has(task.id);
+  return isDoneOn(getTodayStr(), task.id);
 }
 
 function updateTodayProgress(visible) {
@@ -263,8 +254,7 @@ function renderToday() {
     return;
   }
 
-  // 그룹(빨래)을 이번 주 다른 날 완료했으면 오늘 목록에서 숨김
-  const visible = dayData.tasks.filter(t => !isGroupHiddenForToday(t));
+  const visible = dayData.tasks;
 
   // 시간순 정렬 (null은 마지막)
   const sorted = [...visible].sort((a, b) => {
@@ -280,16 +270,26 @@ function renderToday() {
   updateTodayProgress(visible);
 }
 
-// ===== 주간 그리드 렌더링 =====
+// ===== 주간 그리드 렌더링 (viewDate가 속한 주 기준) =====
 function renderWeekGrid() {
   const grid = document.getElementById('weekGrid');
   grid.innerHTML = '';
-  const todayDow = getTodayDow();
+
+  // 실제 오늘(KST) 요일 — '오늘' 강조용
+  const realToday = kstToday();
+  const realTodayKey = `${realToday.getUTCFullYear()}-${realToday.getUTCMonth()+1}-${realToday.getUTCDate()}`;
+
+  // viewDate가 속한 주의 일요일
+  const sunday = new Date(viewDate.getTime());
+  sunday.setUTCDate(sunday.getUTCDate() - sunday.getUTCDay());
 
   // 일~토 순서로
   for (let d = 0; d < 7; d++) {
+    const cellDate = new Date(sunday.getTime());
+    cellDate.setUTCDate(cellDate.getUTCDate() + d);
+    const cellKey = `${cellDate.getUTCFullYear()}-${cellDate.getUTCMonth()+1}-${cellDate.getUTCDate()}`;
     const dayData = WEEK_DATA[d];
-    const isToday = d === todayDow;
+    const isToday = cellKey === realTodayKey;
 
     const col = document.createElement('div');
     col.className = `day-col${isToday ? ' today' : ''}`;
@@ -298,7 +298,7 @@ function renderWeekGrid() {
     col.innerHTML = `
       <div class="day-header">
         <span class="day-emoji">${dayData.emoji}</span>
-        <div class="day-name">${dayData.label}${todayDot}</div>
+        <div class="day-name">${dayData.label} ${cellDate.getUTCDate()}${todayDot}</div>
       </div>
       <div class="day-tasks" id="miniTasks-${d}"></div>
     `;
@@ -307,18 +307,15 @@ function renderWeekGrid() {
 
     const miniContainer = col.querySelector(`#miniTasks-${d}`);
 
-    // 그룹(빨래)을 다른 날 완료했으면 그 날엔 숨김
-    const visible = dayData.tasks.filter(t => !isGroupHiddenForToday(t));
-
     // 시간순 정렬
-    const sorted = [...visible].sort((a, b) => {
+    const sorted = [...dayData.tasks].sort((a, b) => {
       const ta = a.time ? timeToMinutes(a.time) : 9999;
       const tb = b.time ? timeToMinutes(b.time) : 9999;
       return ta - tb;
     });
 
     sorted.forEach(task => {
-      const isDone = task.group ? isGroupDone(task) : doneSet.has(task.id);
+      const isDone = isDoneOn(cellKey, task.id);
       const mini = document.createElement('div');
       mini.className = [
         'mini-task',
@@ -340,11 +337,12 @@ function renderRoutine(routine, stepsElId, progressElId, barElId) {
   const barEl = document.getElementById(barElId);
   stepsEl.innerHTML = '';
 
+  const dateKey = getTodayStr();
   // 아직 완료 안 된 첫 스텝 = 현재 스텝
-  const currentIdx = routine.findIndex(s => !doneSet.has(s.id));
+  const currentIdx = routine.findIndex(s => !isDoneOn(dateKey, s.id));
 
   routine.forEach((step, idx) => {
-    const isDone = doneSet.has(step.id);
+    const isDone = isDoneOn(dateKey, step.id);
     const isCurrent = idx === currentIdx;
 
     const row = document.createElement('div');
@@ -362,12 +360,12 @@ function renderRoutine(routine, stepsElId, progressElId, barElId) {
       </div>
     `;
 
-    row.addEventListener('click', () => toggleDone(step.id));
+    row.addEventListener('click', () => { toggleDoneOn(dateKey, step.id); render(); });
     stepsEl.appendChild(row);
   });
 
   // 진행률
-  const doneCount = routine.filter(s => doneSet.has(s.id)).length;
+  const doneCount = routine.filter(s => isDoneOn(dateKey, s.id)).length;
   const pct = Math.round((doneCount / routine.length) * 100);
   progressEl.textContent = `${doneCount} / ${routine.length}`;
   if (barEl) barEl.style.width = pct + '%';
@@ -375,10 +373,10 @@ function renderRoutine(routine, stepsElId, progressElId, barElId) {
 
 // ===== 시험 D-day 렌더링 =====
 function daysUntil(dateStr) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const target = new Date(dateStr + 'T00:00:00');
-  target.setHours(0, 0, 0, 0);
+  // KST 오늘 자정 기준
+  const today = kstToday(); // UTC 필드가 KST 날짜
+  const [yy, mm, dd] = dateStr.split('-').map(Number);
+  const target = new Date(Date.UTC(yy, mm - 1, dd));
   return Math.round((target - today) / (1000 * 60 * 60 * 24));
 }
 
@@ -551,7 +549,14 @@ function renderMass() {
   }
 
   const todayKey = getTodayStr();
-  const lines = (typeof MASS_REFLECTIONS === 'object' && MASS_REFLECTIONS[todayKey]) || null;
+
+  // 1) 자동화가 생성한 reflections.json 우선, 2) 없으면 data.js의 MASS_REFLECTIONS
+  let lines = null;
+  if (window.__MASS_AUTO && window.__MASS_AUTO[todayKey] && Array.isArray(window.__MASS_AUTO[todayKey].lines)) {
+    lines = window.__MASS_AUTO[todayKey].lines;
+  } else if (typeof MASS_REFLECTIONS === 'object' && MASS_REFLECTIONS[todayKey]) {
+    lines = MASS_REFLECTIONS[todayKey];
+  }
 
   linesEl.innerHTML = '';
 
@@ -570,9 +575,51 @@ function renderMass() {
   }
 }
 
+// ===== Daily 날짜 표시 & 주간 타이틀 =====
+function renderDailyDate() {
+  const el = document.getElementById('dailyDate');
+  const nav = document.querySelector('.daily-nav');
+  if (!el) return;
+  const days = ['일','월','화','수','목','금','토'];
+  const mon = viewDate.getUTCMonth() + 1;
+  const day = viewDate.getUTCDate();
+  const dow = days[viewDate.getUTCDay()];
+  const year = viewDate.getUTCFullYear();
+
+  let label;
+  const t = kstToday();
+  const diff = Math.round((viewDate - t) / 86400000);
+  if (diff === 0) label = '오늘';
+  else if (diff === -1) label = '어제';
+  else if (diff === 1) label = '내일';
+  else label = `${diff > 0 ? '+' : ''}${diff}일`;
+
+  el.innerHTML = `${mon}월 ${day}일 (${dow})<span class="daily-date-sub">${year} · ${label}</span>`;
+  if (nav) nav.classList.toggle('not-today', diff !== 0);
+}
+
+function renderWeekTitle() {
+  const el = document.getElementById('weekTitle');
+  if (!el) return;
+  const sunday = new Date(viewDate.getTime());
+  sunday.setUTCDate(sunday.getUTCDate() - sunday.getUTCDay());
+  const sat = new Date(sunday.getTime());
+  sat.setUTCDate(sat.getUTCDate() + 6);
+
+  // 이번 주인지
+  const realSunday = kstToday();
+  realSunday.setUTCDate(realSunday.getUTCDate() - realSunday.getUTCDay());
+  const isThisWeek = sunday.getTime() === realSunday.getTime();
+
+  const fmt = (d) => `${d.getUTCMonth()+1}.${d.getUTCDate()}`;
+  el.textContent = `🗓️ ${fmt(sunday)} ~ ${fmt(sat)}${isThisWeek ? ' (이번 주)' : ''}`;
+}
+
 // ===== 전체 렌더 =====
 function render() {
   renderHeader();
+  renderDailyDate();
+  renderWeekTitle();
   renderMass();
   renderExams();
   renderCalendars();
@@ -603,8 +650,45 @@ function render() {
   renderWeekGrid();
 }
 
+// ===== 탭 전환 =====
+function switchTab(tab) {
+  const isWeekly = tab === 'weekly';
+  document.getElementById('tabWeekly').classList.toggle('active', isWeekly);
+  document.getElementById('tabDaily').classList.toggle('active', !isWeekly);
+  document.getElementById('panelWeekly').classList.toggle('active', isWeekly);
+  document.getElementById('panelDaily').classList.toggle('active', !isWeekly);
+}
+
+// ===== 이벤트 연결 =====
+function bindControls() {
+  // 탭 버튼
+  document.getElementById('tabWeekly').addEventListener('click', () => switchTab('weekly'));
+  document.getElementById('tabDaily').addEventListener('click', () => switchTab('daily'));
+
+  // Daily 날짜 넘기기
+  document.getElementById('dayPrev').addEventListener('click', () => shiftView(-1));
+  document.getElementById('dayNext').addEventListener('click', () => shiftView(1));
+  document.getElementById('dayToday').addEventListener('click', () => resetViewToToday());
+
+  // 주간 넘기기
+  document.getElementById('weekPrev').addEventListener('click', () => shiftView(-7));
+  document.getElementById('weekNext').addEventListener('click', () => shiftView(7));
+  document.getElementById('weekToday').addEventListener('click', () => resetViewToToday());
+}
+
 // ===== 초기 실행 =====
+bindControls();
+
+// 자동화가 갱신하는 reflections.json을 먼저 불러온 뒤 렌더 (실패해도 앱은 정상 동작)
+window.__MASS_AUTO = null;
+fetch('reflections.json', { cache: 'no-store' })
+  .then(r => r.ok ? r.json() : null)
+  .then(data => { window.__MASS_AUTO = data; })
+  .catch(() => { /* 파일 없거나 file:// 환경 → data.js 값으로 대체 */ })
+  .finally(() => render());
+
+// 혹시 fetch가 매우 느릴 때를 대비해 즉시 1회 렌더
 render();
 
-// 1분마다 긴급 마감 여부 갱신
+// 1분마다 긴급 마감 여부 갱신 (실제 오늘을 보고 있을 때만 의미)
 setInterval(render, 60 * 1000);

@@ -1050,3 +1050,163 @@ footer {
 @media (max-width: 560px) {
   .mass-lines li { font-size: 0.9rem; }
 }
+
+
+/* ===== 탭 네비게이션 ===== */
+.tab-bar {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 14px 16px 0;
+  display: flex;
+  gap: 8px;
+}
+
+.tab-btn {
+  flex: 1;
+  font-family: inherit;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text-sub);
+  background: #EDF0FA;
+  border: none;
+  border-radius: 12px 12px 0 0;
+  padding: 13px 10px;
+  cursor: pointer;
+  transition: all 0.18s;
+  border-bottom: 3px solid transparent;
+}
+
+.tab-btn:hover {
+  background: #E3E8F7;
+}
+
+.tab-btn.active {
+  background: var(--card-bg);
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  box-shadow: 0 -2px 8px rgba(91,127,219,0.08);
+}
+
+/* 탭 패널 */
+.tab-panel {
+  display: none;
+  flex-direction: column;
+  gap: 28px;
+  animation: fadeIn 0.25s ease both;
+}
+.tab-panel.active {
+  display: flex;
+}
+
+/* ===== 주간 네비게이션 ===== */
+.week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.week-nav .week-title {
+  margin: 0;
+  flex: 1;
+  text-align: center;
+}
+
+.wk-nav-btn {
+  font-family: inherit;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--primary-light);
+  border: none;
+  border-radius: 10px;
+  width: 42px;
+  height: 42px;
+  cursor: pointer;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.wk-nav-btn:hover { background: #DCE3FF; }
+.wk-nav-btn:active { transform: scale(0.95); }
+
+.week-nav-footer {
+  text-align: center;
+  margin-top: 12px;
+}
+
+.wk-today-btn, .day-today-btn {
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-light);
+  border: 1.5px solid #CBD6F5;
+  border-radius: 999px;
+  padding: 6px 18px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.wk-today-btn:hover, .day-today-btn:hover { background: #DCE3FF; }
+
+/* ===== Daily 날짜 네비게이션 ===== */
+.daily-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: linear-gradient(135deg, #5B7FDB, #7B5EA7);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+}
+
+.day-nav-btn {
+  font-family: inherit;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: white;
+  background: rgba(255,255,255,0.2);
+  border: 1.5px solid rgba(255,255,255,0.35);
+  border-radius: 10px;
+  width: 46px;
+  height: 46px;
+  cursor: pointer;
+  transition: background 0.15s;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.day-nav-btn:hover { background: rgba(255,255,255,0.32); }
+.day-nav-btn:active { transform: scale(0.95); }
+
+.daily-date {
+  flex: 1;
+  text-align: center;
+  color: white;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.daily-date .daily-date-sub {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+.daily-today-row {
+  text-align: center;
+  margin-top: -14px;
+}
+
+/* Daily가 오늘이 아닐 때 상단 표시 강조 */
+.daily-nav.not-today {
+  background: linear-gradient(135deg, #7A8394, #9AA2B4);
+}
+
+@media (max-width: 560px) {
+  .tab-btn { font-size: 0.9rem; padding: 11px 6px; }
+  .daily-date { font-size: 1.02rem; }
+}
