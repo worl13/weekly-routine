@@ -120,6 +120,16 @@ const EXAMS = [
   }
 ];
 
+// ===== 매일 핵심 습관 (요일 무관, 매일 체크) =====
+const DAILY_HABITS = [
+  { id: "habit-water",   icon: "💧", title: "물 2L 마시기" },
+  { id: "habit-vitamin", icon: "💊", title: "영양제 챙기기" },
+  { id: "habit-nose",    icon: "🧴", title: "코 세척 (아침·저녁)" },
+  { id: "habit-teeth",   icon: "🦷", title: "양치 (아침·저녁)" },
+  { id: "habit-pray",    icon: "📿", title: "기도 · 묵상" },
+  { id: "habit-read",    icon: "📖", title: "독서 30분" }
+];
+
 // ===== 퇴근 후 루틴 =====
 const EVENING_ROUTINE = [
   { id: "pm-1", icon: "👘", title: "잠옷 갈아입기",      detail: "편한 옷으로 환복" },

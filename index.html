@@ -21,7 +21,17 @@
   </header>
 
   <main>
-    <!-- 주간 전체 보기 (맨 위) -->
+    <!-- 매일 핵심 습관 (제일 위, 크게) -->
+    <section class="habit-section" id="habitSection">
+      <h2 class="section-title habit-title">
+        ✨ 오늘의 핵심 습관
+        <span class="habit-count" id="habitCount"></span>
+      </h2>
+      <div class="habit-grid" id="habitGrid"></div>
+      <div class="habit-bar"><div class="habit-bar-inner" id="habitBar" style="width:0%"></div></div>
+    </section>
+
+    <!-- 주간 전체 보기 -->
     <section class="week-section">
       <h2 class="section-title">🗓️ 이번 주 전체</h2>
       <div class="week-grid" id="weekGrid"></div>
