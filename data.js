@@ -211,12 +211,12 @@ const WEEK_DATA = {
       },
       {
         id: "sun-4",
-        title: "상담실습및사례연구 과제 제출",
-        detail: "대면 수업 전날 | 23:59까지",
+        title: "상담실습및사례연구 온라인 강의 듣기",
+        detail: "대면 수업 전날 | 23:59까지 수강 완료",
         time: "23:59",
         deadline: true,
         category: "grad",
-        icon: "📝",
+        icon: "🎧",
         note: "대면 수업 전날"
       }
     ]
@@ -278,12 +278,12 @@ const WEEK_DATA = {
       },
       {
         id: "mon-4",
-        title: "영국문학개관 과제 제출",
-        detail: "전전주 대면 수업 기준 | 월 23:59까지",
+        title: "영국문학개관 온라인 강의 듣기",
+        detail: "전전주 대면 수업 기준 | 월 23:59까지 수강 완료",
         time: "23:59",
         deadline: true,
         category: "grad",
-        icon: "📖",
+        icon: "🎧",
         note: "다음 주 월요일까지"
       },
       {
@@ -401,22 +401,22 @@ const WEEK_DATA = {
       },
       {
         id: "wed-5",
-        title: "상담교육연구방법 과제 제출",
-        detail: "대면 수업 전날 | 23:59까지",
+        title: "상담교육연구방법 온라인 강의 듣기",
+        detail: "대면 수업 전날 | 23:59까지 수강 완료",
         time: "23:59",
         deadline: true,
         category: "grad",
-        icon: "📝",
+        icon: "🎧",
         note: "대면 수업 전날"
       },
       {
         id: "wed-6",
-        title: "특수아상담 과제 제출",
-        detail: "대면 수업 전날 | 23:59까지",
+        title: "특수아상담 온라인 강의 듣기",
+        detail: "대면 수업 전날 | 23:59까지 수강 완료",
         time: "23:59",
         deadline: true,
         category: "grad",
-        icon: "📝",
+        icon: "🎧",
         note: "대면 수업 전날"
       }
     ]
