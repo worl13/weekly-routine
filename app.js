@@ -2,17 +2,52 @@
 const STORAGE_KEY = 'routine_done_tasks';
 const STORAGE_DATE_KEY = 'routine_done_date';
 
+// 주 단위 완료 저장 (빨래처럼 주 1회 하는 그룹 업무용)
+const WEEK_GROUP_KEY = 'routine_week_groups';
+const WEEK_ID_KEY = 'routine_week_id';
+
 function getTodayStr() {
   const d = new Date();
   return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
 }
 
+// 이번 주의 일요일 날짜를 주 식별자로 사용 (일요일 시작 기준)
+function getWeekId() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  const sunday = new Date(d);
+  sunday.setDate(d.getDate() - d.getDay()); // 이번 주 일요일로 이동
+  return `${sunday.getFullYear()}-${sunday.getMonth()+1}-${sunday.getDate()}`;
+}
+
+// 주가 바뀌면 그룹 완료 상태 초기화
+function loadWeekGroups() {
+  const savedWeek = localStorage.getItem(WEEK_ID_KEY);
+  const thisWeek = getWeekId();
+  if (savedWeek !== thisWeek) {
+    localStorage.setItem(WEEK_ID_KEY, thisWeek);
+    localStorage.setItem(WEEK_GROUP_KEY, JSON.stringify({}));
+    return {};
+  }
+  try {
+    return JSON.parse(localStorage.getItem(WEEK_GROUP_KEY) || '{}');
+  } catch { return {}; }
+}
+
+function saveWeekGroups(obj) {
+  localStorage.setItem(WEEK_GROUP_KEY, JSON.stringify(obj));
+  localStorage.setItem(WEEK_ID_KEY, getWeekId());
+}
+
+// weekGroups[group] = 완료 처리된 task id (그 주에 실제로 완료한 항목)
+let weekGroups = loadWeekGroups();
+
 function loadDoneSet() {
-  // 날짜가 바뀌면 체크 초기화
-  const savedDate = localStorage.getItem(STORAGE_DATE_KEY);
-  const today = getTodayStr();
-  if (savedDate !== today) {
-    localStorage.setItem(STORAGE_DATE_KEY, today);
+  // 주가 바뀌면(매주 일요일 0시) 체크 초기화
+  const savedWeek = localStorage.getItem(STORAGE_DATE_KEY);
+  const thisWeek = getWeekId();
+  if (savedWeek !== thisWeek) {
+    localStorage.setItem(STORAGE_DATE_KEY, thisWeek);
     localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
     return new Set();
   }
@@ -24,7 +59,7 @@ function loadDoneSet() {
 
 function saveDoneSet(set) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify([...set]));
-  localStorage.setItem(STORAGE_DATE_KEY, getTodayStr());
+  localStorage.setItem(STORAGE_DATE_KEY, getWeekId());
 }
 
 let doneSet = loadDoneSet();
@@ -63,7 +98,7 @@ function renderHeader() {
 
 // ===== 카드 생성 =====
 function createTaskCard(task, showCheckbox = true) {
-  const isDone = doneSet.has(task.id);
+  const isDone = task.group ? isGroupDone(task) : doneSet.has(task.id);
   const cat = CATEGORY_META[task.category] || CATEGORY_META.work;
   const nowMin = getNow();
   const taskMin = timeToMinutes(task.time);
@@ -123,7 +158,11 @@ function createTaskCard(task, showCheckbox = true) {
     const btn = card.querySelector('.check-btn');
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      toggleDone(task.id);
+      if (task.group) {
+        toggleGroupDone(task);
+      } else {
+        toggleDone(task.id);
+      }
     });
   }
 
@@ -140,6 +179,42 @@ function toggleDone(id) {
   render();
 }
 
+// 모든 요일에서 task id로 task 객체 찾기
+function findTaskById(id) {
+  for (let d = 0; d < 7; d++) {
+    const t = (WEEK_DATA[d]?.tasks || []).find(t => t.id === id);
+    if (t) return t;
+  }
+  return null;
+}
+
+// 그룹(예: 빨래) 완료 토글 — 주 단위로 저장
+function toggleGroupDone(task) {
+  const g = task.group;
+  if (weekGroups[g] === task.id) {
+    // 같은 항목 다시 클릭 → 이번 주 완료 취소
+    delete weekGroups[g];
+  } else {
+    // 이 항목으로 이번 주 완료 처리 (다른 요일 항목은 자동 숨김)
+    weekGroups[g] = task.id;
+  }
+  saveWeekGroups(weekGroups);
+  render();
+}
+
+// 그룹 업무를 이번 주에 이미 (다른 날) 완료했는지 → 숨겨야 하는지 판단
+function isGroupHiddenForToday(task) {
+  if (!task.group) return false;
+  const doneId = weekGroups[task.group];
+  // 이번 주에 그룹을 완료했고, 그게 이 항목이 아니면 숨김
+  return doneId && doneId !== task.id;
+}
+
+// 그룹 업무가 이번 주에 완료됐는지 (자기 자신 기준)
+function isGroupDone(task) {
+  return task.group && weekGroups[task.group] === task.id;
+}
+
 // ===== 오늘의 업무 렌더링 =====
 function renderToday() {
   const dow = getTodayDow();
@@ -152,8 +227,16 @@ function renderToday() {
     return;
   }
 
+  // 그룹(빨래)을 이번 주 다른 날 완료했으면 오늘 목록에서 숨김
+  const visible = dayData.tasks.filter(t => !isGroupHiddenForToday(t));
+
+  if (!visible.length) {
+    container.innerHTML = '<p class="empty-msg">오늘 할 일을 모두 마쳤어요 🎉</p>';
+    return;
+  }
+
   // 시간순 정렬 (null은 마지막)
-  const sorted = [...dayData.tasks].sort((a, b) => {
+  const sorted = [...visible].sort((a, b) => {
     const ta = a.time ? timeToMinutes(a.time) : 9999;
     const tb = b.time ? timeToMinutes(b.time) : 9999;
     return ta - tb;
@@ -191,15 +274,18 @@ function renderWeekGrid() {
 
     const miniContainer = col.querySelector(`#miniTasks-${d}`);
 
+    // 그룹(빨래)을 다른 날 완료했으면 그 날엔 숨김
+    const visible = dayData.tasks.filter(t => !isGroupHiddenForToday(t));
+
     // 시간순 정렬
-    const sorted = [...dayData.tasks].sort((a, b) => {
+    const sorted = [...visible].sort((a, b) => {
       const ta = a.time ? timeToMinutes(a.time) : 9999;
       const tb = b.time ? timeToMinutes(b.time) : 9999;
       return ta - tb;
     });
 
     sorted.forEach(task => {
-      const isDone = doneSet.has(task.id);
+      const isDone = task.group ? isGroupDone(task) : doneSet.has(task.id);
       const mini = document.createElement('div');
       mini.className = [
         'mini-task',
@@ -342,10 +428,87 @@ function renderExams() {
   });
 }
 
+// ===== 월간 달력 렌더링 (9~12월, 대학원 일정) =====
+function renderCalendars() {
+  const wrap = document.getElementById('calendars');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+
+  const dowLabels = ['일','월','화','수','목','금','토'];
+  const months = [9, 10, 11, 12];
+  const year = 2026; // EXAMS 기준 연도
+
+  // 날짜별 일정 매핑: "YYYY-M-D" -> [{type, title, subject, icon}, ...]
+  const eventsByDate = {};
+  EXAMS.forEach(e => {
+    if (!e.date) return;
+    const d = new Date(e.date + 'T00:00:00');
+    const key = `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+    (eventsByDate[key] = eventsByDate[key] || []).push(e);
+  });
+
+  const now = new Date();
+  const todayKey = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+
+  months.forEach(month => {
+    const card = document.createElement('div');
+    card.className = 'month-card';
+
+    const firstDay = new Date(year, month - 1, 1).getDay(); // 1일의 요일
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    let html = `<div class="month-title">${year}년 ${month}월</div><div class="cal-grid">`;
+
+    // 요일 헤더
+    dowLabels.forEach((lbl, i) => {
+      const cls = i === 0 ? 'sun' : i === 6 ? 'sat' : '';
+      html += `<div class="cal-dow ${cls}">${lbl}</div>`;
+    });
+
+    // 앞쪽 빈 칸
+    for (let i = 0; i < firstDay; i++) {
+      html += `<div class="cal-cell empty"></div>`;
+    }
+
+    // 날짜 칸
+    for (let day = 1; day <= daysInMonth; day++) {
+      const key = `${year}-${month}-${day}`;
+      const events = eventsByDate[key] || [];
+      const isToday = key === todayKey;
+      const hasEvent = events.length > 0;
+
+      const cellClass = ['cal-cell', hasEvent ? 'has-event' : '', isToday ? 'today' : '']
+        .filter(Boolean).join(' ');
+
+      let dots = '';
+      let label = '';
+      if (hasEvent) {
+        dots = '<div class="cell-dots">' +
+          events.map(e => `<span class="cell-dot type-${e.type}"></span>`).join('') +
+          '</div>';
+        // 라벨: 과목 축약 (첫 일정 기준, 2개 이상이면 +N)
+        const first = events[0];
+        const extra = events.length > 1 ? ` +${events.length - 1}` : '';
+        label = `<div class="cell-label" title="${events.map(e => e.subject + ' ' + e.title).join(', ')}">${first.icon}${extra}</div>`;
+      }
+
+      html += `<div class="${cellClass}">
+        <span class="cell-date">${day}</span>
+        ${dots}${label}
+      </div>`;
+    }
+
+    html += `</div>`;
+    card.innerHTML = html;
+    wrap.appendChild(card);
+  });
+}
+
 // ===== 전체 렌더 =====
 function render() {
   renderHeader();
   renderExams();
+  renderCalendars();
 
   const dow = getTodayDow();
   const isWeekday = dow >= 1 && dow <= 5; // 월~금

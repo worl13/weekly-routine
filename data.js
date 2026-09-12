@@ -174,11 +174,12 @@ const WEEK_DATA = {
       {
         id: "sun-2",
         title: "빨래방 빨래",
-        detail: "퇴근 후 (수요일 대체 가능)",
+        detail: "일/수 중 한 번 (퇴근 후)",
         time: null,
         category: "life",
         icon: "🧺",
-        flexible: true
+        flexible: true,
+        group: "laundry"
       },
       {
         id: "sun-3",
@@ -363,11 +364,12 @@ const WEEK_DATA = {
       {
         id: "wed-3",
         title: "빨래방 빨래",
-        detail: "퇴근 후 (일요일 대체 가능)",
+        detail: "일/수 중 한 번 (퇴근 후)",
         time: null,
         category: "life",
         icon: "🧺",
-        flexible: true
+        flexible: true,
+        group: "laundry"
       },
       {
         id: "wed-4",

@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>나의 주간 루틴</title>
+  <!-- Pretendard 웹폰트 (렌더 블로킹 최소화) -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -17,9 +21,15 @@
   </header>
 
   <main>
+    <!-- 주간 전체 보기 (맨 위) -->
+    <section class="week-section">
+      <h2 class="section-title">🗓️ 이번 주 전체</h2>
+      <div class="week-grid" id="weekGrid"></div>
+    </section>
+
     <!-- 시험 D-day 알림 섹션 -->
     <section class="exam-section" id="examSection" style="display:none;">
-      <h2 class="section-title">⏳ 다가오는 시험</h2>
+      <h2 class="section-title">⏳ 다가오는 시험 · 과제</h2>
       <div class="exam-list" id="examList"></div>
     </section>
 
@@ -43,10 +53,15 @@
       <div class="morning-done-bar"><div class="morning-done-bar-inner evening-bar-inner" id="eveningBar" style="width:0%"></div></div>
     </section>
 
-    <!-- 주간 전체 보기 -->
-    <section class="week-section">
-      <h2 class="section-title">🗓️ 이번 주 전체</h2>
-      <div class="week-grid" id="weekGrid"></div>
+    <!-- 월간 달력 (9~12월, 대학원 일정) — 맨 하단 -->
+    <section class="calendar-section" id="calendarSection">
+      <h2 class="section-title">📆 대학원 일정 달력</h2>
+      <div class="calendar-legend">
+        <span class="legend-item"><span class="legend-dot type-exam"></span> 시험</span>
+        <span class="legend-item"><span class="legend-dot type-report"></span> 보고서</span>
+        <span class="legend-item"><span class="legend-dot type-presentation"></span> 발표</span>
+      </div>
+      <div class="calendars" id="calendars"></div>
     </section>
   </main>
 
