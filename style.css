@@ -1,0 +1,706 @@
+/* ===== 기본 리셋 & 폰트 ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary: #5B7FDB;
+  --primary-light: #EEF2FF;
+  --text-main: #1A1A2E;
+  --text-sub: #6B7280;
+  --bg: #F5F7FF;
+  --card-bg: #FFFFFF;
+  --border: #E5E9F2;
+  --today-glow: #5B7FDB;
+  --deadline-color: #E53E3E;
+  --deadline-bg: #FFF5F5;
+  --shadow: 0 2px 12px rgba(91,127,219,0.10);
+  --shadow-hover: 0 6px 24px rgba(91,127,219,0.18);
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+
+body {
+  font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text-main);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* ===== 헤더 ===== */
+header {
+  background: linear-gradient(135deg, #5B7FDB 0%, #7B5EA7 100%);
+  color: white;
+  padding: 28px 24px 20px;
+  text-align: center;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+header h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.today-badge {
+  background: rgba(255,255,255,0.25);
+  border: 1.5px solid rgba(255,255,255,0.5);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 4px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.subtitle {
+  margin-top: 6px;
+  font-size: 0.88rem;
+  opacity: 0.85;
+}
+
+/* ===== 메인 레이아웃 ===== */
+main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.section-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ===== 오늘의 업무 카드 ===== */
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.task-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: box-shadow 0.2s, opacity 0.2s;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.task-card:hover {
+  box-shadow: var(--shadow-hover);
+}
+
+.task-card.deadline {
+  border-left: 4px solid var(--deadline-color);
+  background: var(--deadline-bg);
+}
+
+.task-card.done {
+  opacity: 0.45;
+}
+
+.task-card.done .task-title {
+  text-decoration: line-through;
+  color: var(--text-sub);
+}
+
+/* 카테고리 좌측 바 */
+.task-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  border-radius: 4px 0 0 4px;
+}
+.task-card.cat-work::before    { background: #4A90D9; }
+.task-card.cat-grad::before    { background: #7B5EA7; }
+.task-card.cat-personal::before{ background: #E07B3A; }
+.task-card.cat-life::before    { background: #3BAD7E; }
+
+/* deadline 카드는 좌측 바 override */
+.task-card.deadline::before    { background: var(--deadline-color); }
+
+.task-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.task-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-title {
+  font-size: 0.97rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.task-detail {
+  font-size: 0.82rem;
+  color: var(--text-sub);
+  margin-top: 2px;
+}
+
+.task-note {
+  display: inline-block;
+  margin-top: 5px;
+  font-size: 0.75rem;
+  background: #FFF3CD;
+  color: #856404;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-weight: 500;
+}
+
+.task-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.badge-cat {
+  color: white;
+}
+.badge-cat.cat-work     { background: #4A90D9; }
+.badge-cat.cat-grad     { background: #7B5EA7; }
+.badge-cat.cat-personal { background: #E07B3A; }
+.badge-cat.cat-life     { background: #3BAD7E; }
+
+.badge-deadline {
+  background: var(--deadline-color);
+  color: white;
+}
+
+.badge-flexible {
+  background: #E2F0D9;
+  color: #3A7D44;
+}
+
+.check-btn {
+  background: none;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+  margin-top: 2px;
+}
+
+.check-btn:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.task-card.done .check-btn {
+  border-color: #9CA3AF;
+  background: #F3F4F6;
+  color: #9CA3AF;
+}
+
+/* ===== 주간 그리드 ===== */
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+
+.day-col {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.2s;
+}
+
+.day-col.today {
+  border: 2px solid var(--today-glow);
+  box-shadow: 0 0 0 3px rgba(91,127,219,0.15), var(--shadow-hover);
+}
+
+.day-header {
+  padding: 10px 8px 8px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+.day-col.today .day-header {
+  background: linear-gradient(135deg, #5B7FDB, #7B5EA7);
+  color: white;
+}
+
+.day-emoji {
+  font-size: 1.1rem;
+  display: block;
+}
+
+.day-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.day-col.today .day-name {
+  color: white;
+}
+
+.today-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: white;
+  border-radius: 50%;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.day-tasks {
+  padding: 8px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.mini-task {
+  font-size: 0.70rem;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-weight: 500;
+  line-height: 1.3;
+  cursor: default;
+}
+
+.mini-task.cat-work     { background: #EBF4FF; color: #1A5FA1; }
+.mini-task.cat-grad     { background: #F3EEF9; color: #5B3FA0; }
+.mini-task.cat-personal { background: #FEF3EB; color: #C05C1A; }
+.mini-task.cat-life     { background: #E8F7F1; color: #1A7A52; }
+.mini-task.is-deadline  { background: #FFF5F5; color: #C53030; }
+
+.mini-task.done-mini {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+/* ===== 빈 상태 ===== */
+.empty-msg {
+  color: var(--text-sub);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 12px 0;
+}
+
+/* ===== 푸터 ===== */
+footer {
+  text-align: center;
+  padding: 20px 16px 32px;
+  color: var(--text-sub);
+  font-size: 0.83rem;
+}
+
+/* ===== 반응형: 태블릿 ===== */
+@media (max-width: 860px) {
+  .week-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ===== 반응형: 모바일 ===== */
+@media (max-width: 560px) {
+  header h1 {
+    font-size: 1.3rem;
+  }
+
+  .week-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .day-col.today {
+    grid-column: 1 / -1;
+  }
+
+  main {
+    padding: 16px 12px 32px;
+    gap: 24px;
+  }
+
+  .task-card {
+    padding: 12px 12px;
+  }
+
+  .task-title {
+    font-size: 0.93rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .week-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== 애니메이션 ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.task-card, .day-col {
+  animation: fadeIn 0.3s ease both;
+}
+
+.task-card:nth-child(1)  { animation-delay: 0.03s; }
+.task-card:nth-child(2)  { animation-delay: 0.06s; }
+.task-card:nth-child(3)  { animation-delay: 0.09s; }
+.task-card:nth-child(4)  { animation-delay: 0.12s; }
+.task-card:nth-child(5)  { animation-delay: 0.15s; }
+.task-card:nth-child(6)  { animation-delay: 0.18s; }
+
+
+/* ===== 아침 루틴 섹션 ===== */
+.morning-section {
+  background: linear-gradient(135deg, #FFF8F0 0%, #FFF0E8 100%);
+  border: 1.5px solid #FFD8B0;
+  border-radius: var(--radius);
+  padding: 20px 18px;
+  box-shadow: var(--shadow);
+}
+
+.morning-section .section-title {
+  color: #C05C1A;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.morning-progress {
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: #E07B3A;
+  color: white;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+/* 스텝 목록 */
+.morning-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+
+/* 연결선 */
+.morning-steps::before {
+  content: '';
+  position: absolute;
+  left: 18px;
+  top: 20px;
+  bottom: 20px;
+  width: 2px;
+  background: linear-gradient(to bottom, #FFD8B0, #FFB87A);
+  z-index: 0;
+  border-radius: 2px;
+}
+
+.step-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 4px;
+  position: relative;
+  z-index: 1;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s;
+}
+
+.step-row:hover {
+  background: rgba(224,123,58,0.07);
+}
+
+.step-row.step-done .step-text {
+  text-decoration: line-through;
+  color: #AAA;
+}
+
+.step-row.step-done .step-num {
+  background: #C5D1A0;
+  border-color: #B0BE80;
+  color: white;
+}
+
+/* 번호 원형 */
+.step-num {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid #FFB87A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  box-shadow: 0 2px 6px rgba(224,123,58,0.15);
+}
+
+.step-row.step-current .step-num {
+  background: #E07B3A;
+  border-color: #E07B3A;
+  box-shadow: 0 0 0 4px rgba(224,123,58,0.25);
+}
+
+.step-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 6px;
+}
+
+.step-text {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.step-detail {
+  font-size: 0.78rem;
+  color: var(--text-sub);
+  margin-top: 1px;
+}
+
+.step-row.step-current .step-text {
+  color: #C05C1A;
+}
+
+/* 완료 바 */
+.morning-done-bar {
+  margin-top: 14px;
+  background: #FFE8D0;
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.morning-done-bar-inner {
+  height: 100%;
+  background: linear-gradient(90deg, #E07B3A, #F4A261);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+@media (max-width: 560px) {
+  .morning-section {
+    padding: 16px 14px;
+  }
+
+  .morning-steps::before {
+    left: 16px;
+  }
+}
+
+
+/* ===== 퇴근 후 루틴 섹션 (보라-파랑 계열) ===== */
+.evening-section {
+  background: linear-gradient(135deg, #F0F4FF 0%, #EAE6FF 100%);
+  border: 1.5px solid #C3C8F5;
+  border-radius: var(--radius);
+  padding: 20px 18px;
+  box-shadow: var(--shadow);
+}
+
+.evening-section .section-title {
+  color: #4A3FA0;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.evening-progress {
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: #7B5EA7;
+  color: white;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.evening-section .morning-steps::before {
+  background: linear-gradient(to bottom, #C3C8F5, #9EA6EC);
+}
+
+.evening-section .step-num {
+  border-color: #9EA6EC;
+}
+
+.evening-section .step-row:hover {
+  background: rgba(91, 79, 160, 0.07);
+}
+
+.evening-section .step-row.step-current .step-num {
+  background: #7B5EA7;
+  border-color: #7B5EA7;
+  box-shadow: 0 0 0 4px rgba(123,94,167,0.22);
+}
+
+.evening-section .step-row.step-current .step-text {
+  color: #4A3FA0;
+}
+
+.morning-done-bar-inner.evening-bar-inner {
+  background: linear-gradient(90deg, #7B5EA7, #9EA6EC);
+}
+
+@media (max-width: 560px) {
+  .evening-section {
+    padding: 16px 14px;
+  }
+}
+
+
+/* ===== 시험 D-day 알림 섹션 ===== */
+.exam-section .section-title {
+  color: #C53030;
+}
+
+.exam-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.exam-card {
+  background: linear-gradient(135deg, #FFF5F5 0%, #FFECEC 100%);
+  border: 1.5px solid #F5B5B5;
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow);
+}
+
+.exam-card.exam-urgent {
+  border-color: #E53E3E;
+  box-shadow: 0 0 0 3px rgba(229,62,62,0.15), var(--shadow);
+}
+
+.exam-icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.exam-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.exam-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.exam-detail {
+  font-size: 0.8rem;
+  color: var(--text-sub);
+  margin-top: 2px;
+}
+
+.exam-dday {
+  flex-shrink: 0;
+  text-align: center;
+  background: #E53E3E;
+  color: white;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  min-width: 64px;
+}
+
+.exam-dday .dday-num {
+  font-size: 1.15rem;
+  display: block;
+  line-height: 1.1;
+}
+
+.exam-dday .dday-label {
+  font-size: 0.66rem;
+  opacity: 0.9;
+}
+
+.exam-card.exam-soft .exam-dday {
+  background: #7B5EA7;
+}
+
+
+/* ===== 일정 타입 라벨 & 미정 상태 ===== */
+.exam-type {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #E5E9F2;
+  color: #4A5568;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* 날짜 미정 카드 */
+.exam-card.exam-tbd {
+  background: #F7F8FA;
+  border: 1.5px dashed #C5CBD6;
+}
+
+.exam-dday.exam-dday-tbd {
+  background: #9CA3AF;
+}

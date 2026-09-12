@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>나의 주간 루틴</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <h1>📅 나의 주간 루틴</h1>
+      <div class="today-badge" id="todayBadge"></div>
+    </div>
+    <p class="subtitle">오늘도 수고 많으셨어요 ☕</p>
+  </header>
+
+  <main>
+    <!-- 시험 D-day 알림 섹션 -->
+    <section class="exam-section" id="examSection" style="display:none;">
+      <h2 class="section-title">⏳ 다가오는 시험</h2>
+      <div class="exam-list" id="examList"></div>
+    </section>
+
+    <!-- 아침 루틴 섹션 (월~금만 표시) -->
+    <section class="morning-section" id="morningSection" style="display:none;">
+      <h2 class="section-title">🌅 아침 루틴 <span class="morning-progress" id="morningProgress"></span></h2>
+      <div class="morning-steps" id="morningSteps"></div>
+      <div class="morning-done-bar"><div class="morning-done-bar-inner" id="morningBar" style="width:0%"></div></div>
+    </section>
+
+    <!-- 오늘의 업무 섹션 -->
+    <section class="today-section" id="todaySection">
+      <h2 class="section-title">📌 오늘의 업무</h2>
+      <div class="task-list" id="todayTasks"></div>
+    </section>
+
+    <!-- 퇴근 후 루틴 섹션 (월~금만 표시) -->
+    <section class="evening-section" id="eveningSection" style="display:none;">
+      <h2 class="section-title">🌙 퇴근 후 루틴 <span class="evening-progress" id="eveningProgress"></span></h2>
+      <div class="morning-steps" id="eveningSteps"></div>
+      <div class="morning-done-bar"><div class="morning-done-bar-inner evening-bar-inner" id="eveningBar" style="width:0%"></div></div>
+    </section>
+
+    <!-- 주간 전체 보기 -->
+    <section class="week-section">
+      <h2 class="section-title">🗓️ 이번 주 전체</h2>
+      <div class="week-grid" id="weekGrid"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>매주 새벽 4시에 일어나는 당신, 정말 대단해요 💪</p>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
