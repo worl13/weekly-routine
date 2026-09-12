@@ -537,9 +537,43 @@ function renderCalendars() {
   });
 }
 
+// ===== 오늘의 미사 3줄 묵상 렌더링 =====
+function renderMass() {
+  const linesEl = document.getElementById('massLines');
+  const krEl = document.getElementById('massKr');
+  const usEl = document.getElementById('massUs');
+  if (!linesEl) return;
+
+  // 링크 연결
+  if (typeof MASS_LINKS === 'object') {
+    if (krEl && MASS_LINKS.kr) krEl.href = MASS_LINKS.kr;
+    if (usEl && MASS_LINKS.us) usEl.href = MASS_LINKS.us;
+  }
+
+  const todayKey = getTodayStr();
+  const lines = (typeof MASS_REFLECTIONS === 'object' && MASS_REFLECTIONS[todayKey]) || null;
+
+  linesEl.innerHTML = '';
+
+  if (lines && lines.length) {
+    lines.forEach(text => {
+      const li = document.createElement('li');
+      li.textContent = text;
+      linesEl.appendChild(li);
+    });
+  } else {
+    // 오늘 요약이 아직 없을 때 안내
+    const li = document.createElement('li');
+    li.className = 'mass-empty-row';
+    li.innerHTML = `<span class="mass-empty">오늘의 3줄 묵상이 아직 없어요. 위 링크에서 오늘 본문을 읽어보세요 🙏<br>(Kiro에게 "오늘 미사 3줄 요약해줘"라고 하면 채워드려요.)</span>`;
+    linesEl.appendChild(li);
+  }
+}
+
 // ===== 전체 렌더 =====
 function render() {
   renderHeader();
+  renderMass();
   renderExams();
   renderCalendars();
 

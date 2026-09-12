@@ -945,3 +945,108 @@ footer {
     font-size: 1.6rem;
   }
 }
+
+
+/* ===== 오늘의 미사 3줄 묵상 ===== */
+.mass-section {
+  background: linear-gradient(135deg, #FFFDF5 0%, #FBF6EA 100%);
+  border: 1.5px solid #EBDFC0;
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+}
+
+.mass-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.mass-title {
+  font-size: 1.05rem;
+  color: #8A6D1F;
+  margin: 0;
+}
+
+.mass-links {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* 작은 플래그 링크 */
+.mass-flag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: #7A6420;
+  background: #F3EAD0;
+  border: 1px solid #E3D3A8;
+  padding: 3px 10px;
+  border-radius: 999px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.mass-flag:hover {
+  background: #EAD9AE;
+  transform: translateY(-1px);
+}
+
+/* 3줄 묵상 */
+.mass-lines {
+  list-style: none;
+  counter-reset: mass;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+}
+
+.mass-lines li {
+  counter-increment: mass;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-main);
+}
+
+.mass-lines li::before {
+  content: counter(mass);
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #C9A94E;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.mass-empty-row { gap: 0 !important; }
+.mass-empty-row::before { display: none !important; }
+
+.mass-empty {
+  font-size: 0.88rem;
+  color: var(--text-sub);
+  line-height: 1.6;
+}
+
+.mass-empty a {
+  color: #8A6D1F;
+  font-weight: 600;
+}
+
+@media (max-width: 560px) {
+  .mass-lines li { font-size: 0.9rem; }
+}

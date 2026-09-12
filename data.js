@@ -120,6 +120,24 @@ const EXAMS = [
   }
 ];
 
+// ===== 오늘의 미사 3줄 묵상 =====
+// 날짜별로 3줄 요약을 넣어두면 그 날짜에 표시됩니다. (형식: "YYYY-M-D")
+// 매일 아침, 아래 두 링크의 본문을 바탕으로 3줄을 채워 넣으세요.
+// (Kiro에게 "오늘 미사 3줄 요약해줘"라고 하면 대신 채워드릴 수 있어요.)
+const MASS_LINKS = {
+  kr: "https://missa.cbck.or.kr/DailyMissa",             // 한국 매일미사
+  us: "https://catholic-daily-reflections.com/daily-reflections/" // 미국 Daily Reflections
+};
+
+const MASS_REFLECTIONS = {
+  // 예시 (실제 그날 본문에 맞게 교체하세요)
+  "2026-9-12": [
+    "오늘 복음은 서로 사랑하라는 예수님의 당부를 전합니다.",
+    "바쁜 하루 속에서도 곁의 사람에게 먼저 다정한 말을 건네 보세요.",
+    "지친 나 자신에게도 '수고했다'고 말해주는 하루가 되기를."
+  ]
+};
+
 // ===== 퇴근 후 루틴 =====
 const EVENING_ROUTINE = [
   { id: "pm-1", icon: "👘", title: "잠옷 갈아입기",      detail: "편한 옷으로 환복" },
