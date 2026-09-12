@@ -21,14 +21,14 @@
   </header>
 
   <main>
-    <!-- 매일 핵심 습관 (제일 위, 크게) -->
-    <section class="habit-section" id="habitSection">
-      <h2 class="section-title habit-title">
-        ✨ 오늘의 핵심 습관
-        <span class="habit-count" id="habitCount"></span>
+    <!-- 오늘 할 일 (제일 위, 크게 — 체크리스트) -->
+    <section class="today-section today-hero" id="todaySection">
+      <h2 class="section-title today-title">
+        ✅ 오늘 할 일
+        <span class="today-count" id="todayCount"></span>
       </h2>
-      <div class="habit-grid" id="habitGrid"></div>
-      <div class="habit-bar"><div class="habit-bar-inner" id="habitBar" style="width:0%"></div></div>
+      <div class="task-list" id="todayTasks"></div>
+      <div class="today-bar"><div class="today-bar-inner" id="todayBar" style="width:0%"></div></div>
     </section>
 
     <!-- 주간 전체 보기 -->
@@ -48,12 +48,6 @@
       <h2 class="section-title">🌅 아침 루틴 <span class="morning-progress" id="morningProgress"></span></h2>
       <div class="morning-steps" id="morningSteps"></div>
       <div class="morning-done-bar"><div class="morning-done-bar-inner" id="morningBar" style="width:0%"></div></div>
-    </section>
-
-    <!-- 오늘의 업무 섹션 -->
-    <section class="today-section" id="todaySection">
-      <h2 class="section-title">📌 오늘의 업무</h2>
-      <div class="task-list" id="todayTasks"></div>
     </section>
 
     <!-- 퇴근 후 루틴 섹션 (월~금만 표시) -->

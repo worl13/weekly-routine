@@ -1,4 +1,17 @@
 // ===== 상태 관리 =====
+// localStorage 안전 래퍼 (file://·프라이빗 모드 등 차단 환경에서도 앱이 멈추지 않도록)
+const memoryStore = {};
+const safeStorage = {
+  getItem(k) {
+    try { return localStorage.getItem(k); }
+    catch { return (k in memoryStore) ? memoryStore[k] : null; }
+  },
+  setItem(k, v) {
+    try { localStorage.setItem(k, v); }
+    catch { memoryStore[k] = String(v); }
+  }
+};
+
 const STORAGE_KEY = 'routine_done_tasks';
 const STORAGE_DATE_KEY = 'routine_done_date';
 
@@ -22,68 +35,46 @@ function getWeekId() {
 
 // 주가 바뀌면 그룹 완료 상태 초기화
 function loadWeekGroups() {
-  const savedWeek = localStorage.getItem(WEEK_ID_KEY);
+  const savedWeek = safeStorage.getItem(WEEK_ID_KEY);
   const thisWeek = getWeekId();
   if (savedWeek !== thisWeek) {
-    localStorage.setItem(WEEK_ID_KEY, thisWeek);
-    localStorage.setItem(WEEK_GROUP_KEY, JSON.stringify({}));
+    safeStorage.setItem(WEEK_ID_KEY, thisWeek);
+    safeStorage.setItem(WEEK_GROUP_KEY, JSON.stringify({}));
     return {};
   }
   try {
-    return JSON.parse(localStorage.getItem(WEEK_GROUP_KEY) || '{}');
+    return JSON.parse(safeStorage.getItem(WEEK_GROUP_KEY) || '{}');
   } catch { return {}; }
 }
 
 function saveWeekGroups(obj) {
-  localStorage.setItem(WEEK_GROUP_KEY, JSON.stringify(obj));
-  localStorage.setItem(WEEK_ID_KEY, getWeekId());
+  safeStorage.setItem(WEEK_GROUP_KEY, JSON.stringify(obj));
+  safeStorage.setItem(WEEK_ID_KEY, getWeekId());
 }
 
 // weekGroups[group] = 완료 처리된 task id (그 주에 실제로 완료한 항목)
 let weekGroups = loadWeekGroups();
 
-// ===== 매일 핵심 습관 저장 (매일 자정 초기화) =====
-const HABIT_KEY = 'routine_daily_habits';
-const HABIT_DATE_KEY = 'routine_habit_date';
 
-function loadHabitSet() {
-  const savedDate = localStorage.getItem(HABIT_DATE_KEY);
-  const today = getTodayStr();
-  if (savedDate !== today) {
-    localStorage.setItem(HABIT_DATE_KEY, today);
-    localStorage.setItem(HABIT_KEY, JSON.stringify([]));
-    return new Set();
-  }
-  try {
-    return new Set(JSON.parse(localStorage.getItem(HABIT_KEY) || '[]'));
-  } catch { return new Set(); }
-}
-
-function saveHabitSet(set) {
-  localStorage.setItem(HABIT_KEY, JSON.stringify([...set]));
-  localStorage.setItem(HABIT_DATE_KEY, getTodayStr());
-}
-
-let habitSet = loadHabitSet();
 
 function loadDoneSet() {
   // 주가 바뀌면(매주 일요일 0시) 체크 초기화
-  const savedWeek = localStorage.getItem(STORAGE_DATE_KEY);
+  const savedWeek = safeStorage.getItem(STORAGE_DATE_KEY);
   const thisWeek = getWeekId();
   if (savedWeek !== thisWeek) {
-    localStorage.setItem(STORAGE_DATE_KEY, thisWeek);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+    safeStorage.setItem(STORAGE_DATE_KEY, thisWeek);
+    safeStorage.setItem(STORAGE_KEY, JSON.stringify([]));
     return new Set();
   }
   try {
-    const arr = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    const arr = JSON.parse(safeStorage.getItem(STORAGE_KEY) || '[]');
     return new Set(arr);
   } catch { return new Set(); }
 }
 
 function saveDoneSet(set) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...set]));
-  localStorage.setItem(STORAGE_DATE_KEY, getWeekId());
+  safeStorage.setItem(STORAGE_KEY, JSON.stringify([...set]));
+  safeStorage.setItem(STORAGE_DATE_KEY, getWeekId());
 }
 
 let doneSet = loadDoneSet();
@@ -240,6 +231,26 @@ function isGroupDone(task) {
 }
 
 // ===== 오늘의 업무 렌더링 =====
+function isTaskDone(task) {
+  return task.group ? isGroupDone(task) : doneSet.has(task.id);
+}
+
+function updateTodayProgress(visible) {
+  const countEl = document.getElementById('todayCount');
+  const barEl = document.getElementById('todayBar');
+  const section = document.getElementById('todaySection');
+  if (!countEl) return;
+
+  const total = visible.length;
+  const doneCount = visible.filter(isTaskDone).length;
+  const pct = total ? Math.round((doneCount / total) * 100) : 0;
+  const allDone = total > 0 && doneCount === total;
+
+  countEl.textContent = allDone ? `🎉 ${doneCount} / ${total} 완료!` : `${doneCount} / ${total}`;
+  if (barEl) barEl.style.width = pct + '%';
+  if (section) section.classList.toggle('all-done', allDone);
+}
+
 function renderToday() {
   const dow = getTodayDow();
   const dayData = WEEK_DATA[dow];
@@ -247,17 +258,13 @@ function renderToday() {
   container.innerHTML = '';
 
   if (!dayData || !dayData.tasks.length) {
-    container.innerHTML = '<p class="empty-msg">오늘은 등록된 업무가 없어요 🎉</p>';
+    container.innerHTML = '<p class="empty-msg">오늘은 등록된 할 일이 없어요 🎉</p>';
+    updateTodayProgress([]);
     return;
   }
 
   // 그룹(빨래)을 이번 주 다른 날 완료했으면 오늘 목록에서 숨김
   const visible = dayData.tasks.filter(t => !isGroupHiddenForToday(t));
-
-  if (!visible.length) {
-    container.innerHTML = '<p class="empty-msg">오늘 할 일을 모두 마쳤어요 🎉</p>';
-    return;
-  }
 
   // 시간순 정렬 (null은 마지막)
   const sorted = [...visible].sort((a, b) => {
@@ -269,6 +276,8 @@ function renderToday() {
   sorted.forEach(task => {
     container.appendChild(createTaskCard(task, true));
   });
+
+  updateTodayProgress(visible);
 }
 
 // ===== 주간 그리드 렌더링 =====
@@ -528,49 +537,9 @@ function renderCalendars() {
   });
 }
 
-// ===== 매일 핵심 습관 렌더링 =====
-function toggleHabit(id) {
-  if (habitSet.has(id)) habitSet.delete(id);
-  else habitSet.add(id);
-  saveHabitSet(habitSet);
-  renderHabits();
-}
-
-function renderHabits() {
-  const grid = document.getElementById('habitGrid');
-  const countEl = document.getElementById('habitCount');
-  const barEl = document.getElementById('habitBar');
-  const section = document.getElementById('habitSection');
-  if (!grid) return;
-  grid.innerHTML = '';
-
-  DAILY_HABITS.forEach(habit => {
-    const isDone = habitSet.has(habit.id);
-    const card = document.createElement('div');
-    card.className = `habit-card${isDone ? ' habit-done' : ''}`;
-    card.innerHTML = `
-      <div class="habit-check">✓</div>
-      <span class="habit-icon">${habit.icon}</span>
-      <span class="habit-name">${habit.title}</span>
-    `;
-    card.addEventListener('click', () => toggleHabit(habit.id));
-    grid.appendChild(card);
-  });
-
-  const doneCount = DAILY_HABITS.filter(h => habitSet.has(h.id)).length;
-  const total = DAILY_HABITS.length;
-  const pct = total ? Math.round((doneCount / total) * 100) : 0;
-
-  const allDone = doneCount === total && total > 0;
-  countEl.textContent = allDone ? `🎉 ${doneCount} / ${total} 완료!` : `${doneCount} / ${total}`;
-  if (barEl) barEl.style.width = pct + '%';
-  section.classList.toggle('all-done', allDone);
-}
-
 // ===== 전체 렌더 =====
 function render() {
   renderHeader();
-  renderHabits();
   renderExams();
   renderCalendars();
 
